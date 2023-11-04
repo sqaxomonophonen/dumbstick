@@ -3,6 +3,7 @@
 SHOW_SOLENOID = true;
 PULL = 0; //[0:0.1:13]
 EPSILON = 0.4;
+AXIS_DIAMETER = 6;
 
 module __customizer_delimiter__(){} // every variable below here is not shown in customizer
 
@@ -41,7 +42,6 @@ module solenoid() {
 }
 
 module B0() {
-    axis_diameter = 6;
 
     // primary stop screw
     stop0_diameter = 6.5;
@@ -53,7 +53,7 @@ module B0() {
     difference() {
         translate([0,0,-20]) linear_extrude(height=40, convexity=3) import("b0.dxf");
         translate([-50,-10,-10]) cube([100,30+10,20]);
-        translate([15,15,-50]) cylinder(h=100,d=axis_diameter);
+        translate([15,15,-50]) cylinder(h=100,d=AXIS_DIAMETER);
         translate([stop0_offset,0,0]) rotate([0,0,stop0_angle]) rotate([-90,0,0]) cylinder(h=100,d=stop0_diameter);
         translate([70,0,0]) rotate([-90,0,0]) cylinder(h=100,d=wire_diameter);
         translate([70,105,0]) rotate([-90,0,0]) cylinder(h=100,d=solenoid_body_diameter+EPSILON);
@@ -96,9 +96,18 @@ module B0_top() {
 
 translate([0,0,20]) B0_bottom();
 translate([-10,0,20]) rotate([0,180,0]) B0_top();
-
-
 translate([100,0,0]) B0();
+
+
+
+module TIPPER() {
+    difference() {
+        cube([130,30,15]);
+        translate([130/2,30/2,-15/2]) cylinder(h=30,d=AXIS_DIAMETER);
+    }
+}
+
+translate([0,-50,0]) TIPPER();
 
 
 
