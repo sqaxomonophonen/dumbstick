@@ -2,6 +2,7 @@
 
 SHOW_SOLENOID = true;
 PULL = 0; //[0:0.1:13]
+EPSILON = 0.4;
 
 module __customizer_delimiter__(){} // every variable below here is not shown in customizer
 
@@ -55,28 +56,48 @@ module B0() {
         translate([15,15,-50]) cylinder(h=100,d=axis_diameter);
         translate([stop0_offset,0,0]) rotate([0,0,stop0_angle]) rotate([-90,0,0]) cylinder(h=100,d=stop0_diameter);
         translate([70,0,0]) rotate([-90,0,0]) cylinder(h=100,d=wire_diameter);
-        translate([70,105,0]) rotate([-90,0,0]) cylinder(h=100,d=solenoid_body_diameter+0.4);
+        translate([70,105,0]) rotate([-90,0,0]) cylinder(h=100,d=solenoid_body_diameter+EPSILON);
     }
 }
 
+module fastener(s, sub_epsilon = false) {
+    // XXX does EPSILON hold at an angle?
+    dh = sub_epsilon ? -EPSILON : 0;
+    ds = sub_epsilon ? -EPSILON : 0;
+    cylinder(h=3+dh,d1=s+ds,d2=s/2+ds);
+    mirror([0,0,1]) cylinder(h=3+dh,d1=s+ds,d2=s/2+ds);
+}
+
+module B0_fasteners(sub_epsilon = false) {
+    translate([15,45,0]) fastener(10, sub_epsilon);
+    translate([52,70,0]) fastener(7, sub_epsilon);
+    translate([52,100,0]) fastener(7, sub_epsilon);
+}
+
 module B0_bottom() {
-    translate([0,0,20])
-    difference() {
-        B0();
-        translate([-10,0,0]) cube([200,200,100]);
+    union() {
+        difference() {
+            B0();
+            translate([-10,0,0]) cube([200,200,100]);
+        }
+        B0_fasteners(true);
     }
 }
 
 module B0_top() {
-    translate([0,0,20])
     difference() {
-        rotate([0,180,0]) B0();
-        translate([-150,-20,0]) cube([200,200,100]);
+    difference() {
+            B0();
+            translate([-10,0,-100]) cube([200,200,100]);
+        }
+        B0_fasteners();
     }
 }
 
-B0_bottom();
-translate([-10,0,0]) B0_top();
+translate([0,0,20]) B0_bottom();
+translate([-10,0,20]) rotate([0,180,0]) B0_top();
+
+
 translate([100,0,0]) B0();
 
 
@@ -84,7 +105,7 @@ translate([100,0,0]) B0();
 if (SHOW_SOLENOID) {
     C = 0.8;
     color([C,C,C])
-    translate([70,105,0])
+    translate([70+100,105,0])
     rotate([-90,0,0])
     solenoid();
 }
