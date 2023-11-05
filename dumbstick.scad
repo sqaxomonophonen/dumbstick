@@ -1,7 +1,8 @@
 // length unit: millimeters
 
 PULL = 0; //[0:0.1:13]
-EPSILON = 0.4;
+PRINT_EPSILON = 0.4;
+CAD_EPSILON = 0.05;
 AXIS_DIAMETER = 6;
 
 module __customizer_delimiter__(){} // every variable below here is not shown in customizer
@@ -55,14 +56,14 @@ module B0() {
         translate([15,15,-50]) cylinder(h=100,d=AXIS_DIAMETER);
         translate([stop0_offset,0,0]) rotate([0,0,stop0_angle]) rotate([-90,0,0]) cylinder(h=100,d=stop0_diameter);
         translate([70,0,0]) rotate([-90,0,0]) cylinder(h=100,d=wire_diameter);
-        translate([70,105,0]) rotate([-90,0,0]) cylinder(h=100,d=solenoid_body_diameter+EPSILON);
+        translate([70,105,0]) rotate([-90,0,0]) cylinder(h=100,d=solenoid_body_diameter+PRINT_EPSILON);
     }
 }
 
 module fastener(s, sub_epsilon = false) {
-    // XXX does EPSILON hold at an angle?
-    dh = sub_epsilon ? -EPSILON : 0;
-    ds = sub_epsilon ? -EPSILON : 0;
+    // XXX does PRINT_EPSILON hold at an angle?
+    dh = sub_epsilon ? -PRINT_EPSILON : 0;
+    ds = sub_epsilon ? -PRINT_EPSILON : 0;
     cylinder(h=3+dh,d1=s+ds,d2=s/2+ds);
     mirror([0,0,1]) cylinder(h=3+dh,d1=s+ds,d2=s/2+ds);
 }
@@ -152,10 +153,34 @@ module tipper_cut() {
     translate([tipper_pull_radius-tipper_margin,0,tipper_depth/2]) cube([100,100,30]);
 }
 
+module groove_diamond(w,d,h,xt,eps) {
+    linear_extrude(height=h+xt)
+    polygon([
+        [-w/2+eps,0],
+        [0,d-eps],
+        [w/2-eps,0],
+        [0,-d+eps]
+    ]);
+}
+
+module tipper_groove(xt=0,eps=0) {
+    translate([tipper_pull_radius-tipper_margin,tipper_height/2,tipper_depth/2])
+    rotate([90,0,0])
+    rotate([0,90,0])
+    groove_diamond(3,1,tipper_margin*2,xt,eps);
+}
+
+module tipper_grooves(xt=0,eps=0) {
+    d = 3;
+    translate([0,d,0]) tipper_groove(xt,eps);
+    translate([0,-d,0]) tipper_groove(xt,eps);
+}
+
 module TIPPER_main() {
     difference() {
         TIPPER();
         tipper_cut();
+        tipper_grooves(CAD_EPSILON);
     }
 }
 
@@ -163,8 +188,11 @@ module TIPPER_clamp() {
     translate([0,tipper_height,tipper_depth/2])
     rotate([180,0,0])
     translate([0,0,-tipper_depth/2])
-    intersection() {
-        TIPPER();
-        tipper_cut();
+    union() {
+        intersection() {
+            TIPPER();
+            tipper_cut();
+        }
+        tipper_grooves(0,PRINT_EPSILON);
     }
 }
