@@ -93,9 +93,78 @@ module B0_top() {
     }
 }
 
+module concave_cut(w,d,h) {
+    m = 1.2;
+    ex = w/2 * m;
+    ey = d - (d/(w/2)) * (w/2)*m;
+    linear_extrude(height=h)
+    polygon([
+        [-ex,ey],
+        [ 0,d],
+        [ ex,ey],
+        [ ex,-10+ey],
+        [-ex,-10+ey]
+    ]);
+}
+
+tipper_depth = 15;
+tipper_pull_radius = 55;
+tipper_margin = 10;
+tipper_height = 30;
+
 module TIPPER() {
+    d = tipper_depth;
+    margin = tipper_margin;
+    w = tipper_pull_radius*2 + margin*2;
+    ln = tipper_height;
+    stripw = 8;
+    striph = 5;
+    module strip_hole() {
+        translate([0,0,-50]) cube([stripw,striph,100]);
+    }
+    translate([-w/2,0,0]) {
+        difference() {
+            cube([w,ln,d]);
+            translate([w/2,ln/2,-d/2]) cylinder(h=30,d=AXIS_DIAMETER);
+            translate([0,0,d/2]) rotate([0,90,0]) translate([0,0,-margin/2]) concave_cut(d,2.5,w+margin);
+            translate([w/2-stripw/2,7,0]) {
+                sd0 = 26;
+                translate([sd0,0,0]) strip_hole();
+                translate([-sd0,0,0]) strip_hole();
+                sd1 = 38;
+                translate([sd1,0,0]) strip_hole();
+                translate([-sd1,0,0]) strip_hole();
+            }
+            translate([w-margin,ln/2,-30]) {
+                dx = 4.5;
+                dy = 8;
+                screw_diameter = 4;
+                translate([-dx,-dy,0])    cylinder(h=60,d=screw_diameter);
+                translate([ dx,-dy,0])    cylinder(h=60,d=screw_diameter);
+                translate([ dx, dy,0])    cylinder(h=60,d=screw_diameter);
+                translate([-dx, dy,0])    cylinder(h=60,d=screw_diameter);
+            }
+        }
+    }
+}
+
+module tipper_cut() {
+    translate([tipper_pull_radius-tipper_margin,0,tipper_depth/2]) cube([100,100,30]);
+}
+
+module TIPPER_main() {
     difference() {
-        cube([130,30,15]);
-        translate([130/2,30/2,-15/2]) cylinder(h=30,d=AXIS_DIAMETER);
+        TIPPER();
+        tipper_cut();
+    }
+}
+
+module TIPPER_clamp() {
+    translate([0,tipper_height,tipper_depth/2])
+    rotate([180,0,0])
+    translate([0,0,-tipper_depth/2])
+    intersection() {
+        TIPPER();
+        tipper_cut();
     }
 }
