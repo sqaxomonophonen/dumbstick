@@ -191,8 +191,27 @@ module TIPPER(angle = 0) {
     hh = ln/2;
     stripw = 8;
     striph = 5;
+    xt=100;
     module strip_hole() {
-        translate([0,0,-50]) cube([stripw,striph,100]);
+        // FIXME calculate these from one variable instead
+        r0=15;
+        d0=13;
+        translate([0,0,-xt/2]) {
+            difference() {
+                cube([stripw,striph,xt]);
+                translate([stripw/2,-d0,xt/2+d/2]) rotate([0,90,0]) translate([0,0,-50]) cylinder(r=r0,h=100);
+            }
+        }
+    }
+    module strip_holes() {
+        translate([w/2-stripw/2,7,0]) {
+            sd0 = 26;
+            translate([sd0,0,0]) strip_hole();
+            translate([-sd0,0,0]) strip_hole();
+            sd1 = 38;
+            translate([sd1,0,0]) strip_hole();
+            translate([-sd1,0,0]) strip_hole();
+        }
     }
     translate([0,hh,0]) rotate([0,0,angle]) translate([0,-hh,0]) {
         translate([-w/2,0,0]) {
@@ -200,14 +219,7 @@ module TIPPER(angle = 0) {
                 cube([w,ln,d]);
                 translate([w/2,ln/2,-d/2]) cylinder(h=30,d=AXIS_DIAMETER);
                 translate([0,0,d/2]) rotate([0,90,0]) translate([0,0,-margin/2]) concave_cut(d,2.5,w+margin);
-                translate([w/2-stripw/2,7,0]) {
-                    sd0 = 26;
-                    translate([sd0,0,0]) strip_hole();
-                    translate([-sd0,0,0]) strip_hole();
-                    sd1 = 38;
-                    translate([sd1,0,0]) strip_hole();
-                    translate([-sd1,0,0]) strip_hole();
-                }
+                strip_holes();
                 translate([w-margin,ln/2,-30]) {
                     dx = 4.5;
                     dy = 8;
