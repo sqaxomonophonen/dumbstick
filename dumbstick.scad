@@ -12,7 +12,7 @@ solenoid_body_diameter = 26;
 solenoid_thread_diameter = 13;
 solenoid_body_height = 53;
 
-module metal_part() {
+module mechanical_part() {
     C = 0.8;
     color([C,C,C]) children();
 }
@@ -21,7 +21,7 @@ module electronics_part() {
     color([0,0.3,0.8]) children();
 }
 
-module solenoid() {
+module solenoid(pull = 0) {
     module plunger() {
         diameter = 10;
         extend = 35 - PULL;
@@ -41,7 +41,7 @@ module solenoid() {
         }
     }
 
-    metal_part() {
+    mechanical_part() {
         body_diameter = solenoid_body_diameter;
         thread_diameter = solenoid_thread_diameter;
         thread_extend = 8;
@@ -49,7 +49,7 @@ module solenoid() {
         cylinder(h=solenoid_body_height,d=body_diameter);
         translate([0,0,-thread_extend])
             cylinder(h=thread_extend,d=thread_diameter);
-        plunger();
+        translate([0,0,pull]) plunger();
     }
 }
 
@@ -116,51 +116,117 @@ module B0() {
         translate([stop0_offset,0,0]) rotate([0,0,stop0_angle]) rotate([-90,0,0]) cylinder(h=100,d=stop0_diameter);
         translate([70,0,0]) rotate([-90,0,0]) cylinder(h=100,d=wire_diameter);
         translate([70,105,0]) rotate([-90,0,0]) cylinder(h=solenoid_body_height+1,d=solenoid_body_diameter+PRINT_EPSILON);
+        translate([60,70,-50]) {
+            cube([20,40,100]);
+        }
+        translate([55,155,-50]) cube([30,5,100]);
+        translate([55,145,-50]) cube([30,5,100]);
+        translate([55,135,-50]) cube([30,5,100]);
+        translate([55,125,-50]) cube([30,5,100]);
+        translate([55,115,-50]) cube([30,5,100]);
         imu_B0_cutout();
+        top_screw_diameter = 5;
+        translate([50, 125, 0]) rotate([-90,0,0]) cylinder(h=100,d=top_screw_diameter);
+        translate([90, 125, 0]) rotate([-90,0,0]) cylinder(h=100,d=top_screw_diameter);
     }
+
 }
 
-module B0_solenoid() {
+module B0_solenoid(pull = 0) {
     translate([70,105,0])
     rotate([-90,0,0])
-    solenoid();
+    solenoid(pull);
 }
 
 module B0_imu() {
     translate(IMU_B0_POS) imu();
 }
 
-module fastener(s, sub_epsilon = false) {
+module fixlock(s, sub_epsilon = false, hh = 3) {
     // XXX does PRINT_EPSILON hold at an angle?
     dh = sub_epsilon ? -PRINT_EPSILON : 0;
     ds = sub_epsilon ? -PRINT_EPSILON : 0;
-    cylinder(h=3+dh,d1=s+ds,d2=s/2+ds);
-    mirror([0,0,1]) cylinder(h=3+dh,d1=s+ds,d2=s/2+ds);
+    cylinder(h=hh+dh,d1=s+ds,d2=s/2+ds);
+    mirror([0,0,1]) cylinder(h=hh+dh,d1=s+ds,d2=s/2+ds);
 }
 
-module B0_fasteners(sub_epsilon = false) {
-    translate([17,55,0]) fastener(10, sub_epsilon);
-    translate([52,70,0]) fastener(7, sub_epsilon);
-    translate([52,100,0]) fastener(7, sub_epsilon);
+module B0_fixlocks(sub_epsilon = false) {
+    big=10;
+    small=8;
+    x0 = 51;
+    x1 = 89;
+    y0 = 70;
+    y1 = 100;
+    translate([17,55,0]) fixlock(big, sub_epsilon);
+    translate([x0,y0,0]) fixlock(small, sub_epsilon);
+    translate([x0,y1,0]) fixlock(small, sub_epsilon);
+    translate([x1,y0,0]) fixlock(small, sub_epsilon);
+    translate([x1,y1,0]) fixlock(small, sub_epsilon);
+}
+
+module B0_hatvolume() {
+    translate([-10,-10,-50])
+    cube([120,155+CAD_EPSILON/10,100]);
 }
 
 module B0_bottom() {
-    union() {
-        difference() {
-            B0();
-            translate([-10,0,0]) cube([200,200,100]);
+    intersection() {
+        union() {
+            difference() {
+                B0();
+                translate([-10,0,0]) cube([200,200,100]);
+            }
+            B0_fixlocks(true);
         }
-        B0_fasteners(true);
+        B0_hatvolume();
     }
 }
 
 module B0_top() {
-    difference() {
+    intersection() {
         difference() {
+            difference() {
                 B0();
                 translate([-10,0,-100]) cube([200,200,100]);
             }
-        B0_fasteners();
+            B0_fixlocks();
+        }
+        B0_hatvolume();
+    }
+}
+
+module B0_hat_fixlocks(sub_epsilon = false) {
+    big=10;
+    tiny=3;
+    x0 = 51;
+    x1 = 89;
+    y0 = 70;
+    y1 = 100;
+    hh = 2;
+    translate([55,162.5,0]) fixlock(tiny, sub_epsilon, hh=hh);
+    translate([70,162.5,0]) fixlock(tiny, sub_epsilon, hh=hh);
+    translate([85,162.5,0]) fixlock(tiny, sub_epsilon, hh=hh);
+}
+
+module B0_hat_bottom() {
+    union() {
+        difference() {
+            B0();
+            translate([-10,0,0]) cube([200,200,100]);
+            B0_hatvolume();
+        }
+        B0_hat_fixlocks(true);
+    }
+}
+
+module B0_hat_top() {
+    difference() {
+        difference() {
+            B0();
+            translate([-10,0,-100]) cube([200,200,100]);
+            B0_hatvolume();
+        }
+        B0_hat_fixlocks();
     }
 }
 
@@ -236,11 +302,20 @@ module TIPPER(angle = 0) {
 
 module TIPPER_imu(angle = 0) {
     hh = tipper_height/2;
-    translate([0,hh,0]) rotate([0,0,angle]) translate([0,-hh,0]) {
+    translate([0,tipper_height/2,0]) rotate([0,0,angle]) translate([0,-tipper_height/2,0]) {
         translate([0,0,-IMU_DIM[2]+CAD_EPSILON]) translate(IMU_TIPPER_POS) imu();
     }
 }
 
+module TIPPER_stick(angle = 0) {
+    length = 400;
+    diameter = 14.3;
+    translate([0,tipper_height/2,0]) rotate([0,0,angle]) translate([0,-tipper_height/2,0]) {
+        mechanical_part() {
+            translate([-length/2,-5,tipper_depth/2]) rotate([0,90,0]) cylinder(h=length, d=diameter);
+        }
+    }
+}
 
 module tipper_cut() {
     translate([tipper_pull_radius-tipper_margin,0,tipper_depth/2]) cube([100,100,30]);
