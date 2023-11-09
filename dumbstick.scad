@@ -1,5 +1,6 @@
 // length unit: millimeters
 
+
 PULL = 0; //[0:0.1:13]
 PRINT_EPSILON = 0.4;
 CAD_EPSILON = 0.05;
@@ -10,12 +11,16 @@ module __customizer_delimiter__(){} // every variable below here is not shown in
 solenoid_body_diameter = 26;
 solenoid_thread_diameter = 13;
 
-module solenoid() {
-    body_diameter = solenoid_body_diameter;
-    body_height = 53;
-    thread_diameter = solenoid_thread_diameter;
-    thread_extend = 8;
+module metal_part() {
+    C = 0.8;
+    color([C,C,C]) children();
+}
 
+module electronics_part() {
+    color([0,0.3,0.8]) children();
+}
+
+module solenoid() {
     module plunger() {
         diameter = 10;
         extend = 35 - PULL;
@@ -35,11 +40,25 @@ module solenoid() {
         }
     }
 
-    cylinder(h=body_height,d=body_diameter);
-    translate([0,0,-thread_extend])
-        cylinder(h=thread_extend,d=thread_diameter);
-    plunger();
+    metal_part() {
+        body_diameter = solenoid_body_diameter;
+        body_height = 53;
+        thread_diameter = solenoid_thread_diameter;
+        thread_extend = 8;
+
+        cylinder(h=body_height,d=body_diameter);
+        translate([0,0,-thread_extend])
+            cylinder(h=thread_extend,d=thread_diameter);
+        plunger();
+    }
 }
+
+module imu() {
+    electronics_part() {
+        cube([21, 15, 1.2]); // GY-521
+    }
+}
+
 
 module B0() {
 
@@ -58,6 +77,17 @@ module B0() {
         translate([70,0,0]) rotate([-90,0,0]) cylinder(h=100,d=wire_diameter);
         translate([70,105,0]) rotate([-90,0,0]) cylinder(h=100,d=solenoid_body_diameter+PRINT_EPSILON);
     }
+}
+
+module B0_solenoid() {
+    translate([70,105,0])
+    rotate([-90,0,0])
+    solenoid();
+}
+
+module B0_imu() {
+    translate([5,20,20])
+    imu();
 }
 
 module fastener(s, sub_epsilon = false) {
@@ -113,41 +143,56 @@ tipper_pull_radius = 55;
 tipper_margin = 10;
 tipper_height = 30;
 
-module TIPPER() {
+module TIPPER(angle = 0) {
     d = tipper_depth;
     margin = tipper_margin;
     w = tipper_pull_radius*2 + margin*2;
     ln = tipper_height;
+    hh = ln/2;
     stripw = 8;
     striph = 5;
     module strip_hole() {
         translate([0,0,-50]) cube([stripw,striph,100]);
     }
-    translate([-w/2,0,0]) {
-        difference() {
-            cube([w,ln,d]);
-            translate([w/2,ln/2,-d/2]) cylinder(h=30,d=AXIS_DIAMETER);
-            translate([0,0,d/2]) rotate([0,90,0]) translate([0,0,-margin/2]) concave_cut(d,2.5,w+margin);
-            translate([w/2-stripw/2,7,0]) {
-                sd0 = 26;
-                translate([sd0,0,0]) strip_hole();
-                translate([-sd0,0,0]) strip_hole();
-                sd1 = 38;
-                translate([sd1,0,0]) strip_hole();
-                translate([-sd1,0,0]) strip_hole();
-            }
-            translate([w-margin,ln/2,-30]) {
-                dx = 4.5;
-                dy = 8;
-                screw_diameter = 4;
-                translate([-dx,-dy,0])    cylinder(h=60,d=screw_diameter);
-                translate([ dx,-dy,0])    cylinder(h=60,d=screw_diameter);
-                translate([ dx, dy,0])    cylinder(h=60,d=screw_diameter);
-                translate([-dx, dy,0])    cylinder(h=60,d=screw_diameter);
+    translate([0,hh,0]) rotate([0,0,angle]) translate([0,-hh,0]) {
+        translate([-w/2,0,0]) {
+            difference() {
+                cube([w,ln,d]);
+                translate([w/2,ln/2,-d/2]) cylinder(h=30,d=AXIS_DIAMETER);
+                translate([0,0,d/2]) rotate([0,90,0]) translate([0,0,-margin/2]) concave_cut(d,2.5,w+margin);
+                translate([w/2-stripw/2,7,0]) {
+                    sd0 = 26;
+                    translate([sd0,0,0]) strip_hole();
+                    translate([-sd0,0,0]) strip_hole();
+                    sd1 = 38;
+                    translate([sd1,0,0]) strip_hole();
+                    translate([-sd1,0,0]) strip_hole();
+                }
+                translate([w-margin,ln/2,-30]) {
+                    dx = 4.5;
+                    dy = 8;
+                    screw_diameter = 4;
+                    translate([-dx,-dy,0])    cylinder(h=60,d=screw_diameter);
+                    translate([ dx,-dy,0])    cylinder(h=60,d=screw_diameter);
+                    translate([ dx, dy,0])    cylinder(h=60,d=screw_diameter);
+                    translate([-dx, dy,0])    cylinder(h=60,d=screw_diameter);
+                }
             }
         }
     }
 }
+
+module TIPPER_imu(angle = 0) {
+    hh = tipper_height/2;
+    translate([0,0,15]) {
+        translate([0,hh,0]) rotate([0,0,angle]) translate([0,-hh,0]) {
+            translate([-43,15,0]) {
+                imu();
+            }
+        }
+    }
+}
+
 
 module tipper_cut() {
     translate([tipper_pull_radius-tipper_margin,0,tipper_depth/2]) cube([100,100,30]);
