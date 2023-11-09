@@ -193,9 +193,8 @@ module TIPPER(angle = 0) {
     striph = 5;
     xt=100;
     module strip_hole() {
-        // FIXME calculate these from one variable instead
-        r0=15;
-        d0=13;
+        d0=10;
+        r0=sqrt(pow(d0,2) + pow(tipper_depth/2,2));
         translate([0,0,-xt/2]) {
             difference() {
                 cube([stripw,striph,xt]);
