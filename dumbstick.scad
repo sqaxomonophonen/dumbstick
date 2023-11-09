@@ -54,8 +54,16 @@ module solenoid() {
 }
 
 module imu() {
+    module hole() {
+        translate([0,0,-10]) cylinder(h=20, d=3);
+    }
+    u = 2.54;
     electronics_part() {
-        cube([21, 15, 1.2]); // GY-521
+        difference() {
+            cube([21, 15, 1.2]); // GY-521
+            translate([u, u, 0])  hole();
+            translate([21-u, u, 0])  hole();
+        }
     }
 }
 
