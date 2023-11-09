@@ -10,6 +10,7 @@ module __customizer_delimiter__(){} // every variable below here is not shown in
 
 solenoid_body_diameter = 26;
 solenoid_thread_diameter = 13;
+solenoid_body_height = 53;
 
 module metal_part() {
     C = 0.8;
@@ -42,37 +43,68 @@ module solenoid() {
 
     metal_part() {
         body_diameter = solenoid_body_diameter;
-        body_height = 53;
         thread_diameter = solenoid_thread_diameter;
         thread_extend = 8;
 
-        cylinder(h=body_height,d=body_diameter);
+        cylinder(h=solenoid_body_height,d=body_diameter);
         translate([0,0,-thread_extend])
             cylinder(h=thread_extend,d=thread_diameter);
         plunger();
     }
 }
 
+// IMU: GY-521
+IMU_DIM = [21, 15, 1.2];
+IMU_DHOLE = 2.54;
+IMU_RHOLE = 3;
+
+IMU_B0_POS = [5,25,20];
+IMU_TIPPER_POS = [-43,15,15];
+
+module imu_hole_cylinders(h=10,dh=0,r=IMU_RHOLE+PRINT_EPSILON) {
+    module hole() {
+        translate([0,0,dh]) cylinder(h=h, d=r);
+    }
+    translate([IMU_DHOLE, IMU_DHOLE, 0])  hole();
+    translate([IMU_DIM[0]-IMU_DHOLE, IMU_DHOLE, 0])  hole();
+}
+
 module imu() {
     module hole() {
         translate([0,0,-10]) cylinder(h=20, d=3);
     }
-    u = 2.54;
     electronics_part() {
         difference() {
-            cube([21, 15, 1.2]); // GY-521
-            translate([u, u, 0])  hole();
-            translate([21-u, u, 0])  hole();
+            cube(IMU_DIM);
+            imu_hole_cylinders(h=10,dh=-5);
         }
     }
 }
 
+module imu_B0_cutout() {
+    outer_hole_depth = 2;
+    outer_hole_dr = 4;
+    translate(IMU_B0_POS) {
+        imu_hole_cylinders(30,dh=-20);
+        imu_hole_cylinders(5+outer_hole_depth,dh=-15,r=IMU_RHOLE+outer_hole_dr);
+    }
+}
+
+module imu_TIPPER_cutout() {
+    e = PRINT_EPSILON;
+    e2 = e*2;
+    translate(IMU_TIPPER_POS) {
+        translate([-e,-e,0]) {
+            cube([IMU_DIM[0]+e2,IMU_DIM[1]+e2,10]);
+        }
+        imu_hole_cylinders(30,dh=-20);
+    }
+}
 
 module B0() {
-
     // primary stop screw
     stop0_diameter = 6.5;
-    stop0_angle = 25;
+    stop0_angle = 25; // TODO angle should be from "outer" endpoint? (or at least the other endpoint)
     stop0_offset = 72;
 
     wire_diameter = 4;
@@ -83,7 +115,8 @@ module B0() {
         translate([15,15,-50]) cylinder(h=100,d=AXIS_DIAMETER);
         translate([stop0_offset,0,0]) rotate([0,0,stop0_angle]) rotate([-90,0,0]) cylinder(h=100,d=stop0_diameter);
         translate([70,0,0]) rotate([-90,0,0]) cylinder(h=100,d=wire_diameter);
-        translate([70,105,0]) rotate([-90,0,0]) cylinder(h=100,d=solenoid_body_diameter+PRINT_EPSILON);
+        translate([70,105,0]) rotate([-90,0,0]) cylinder(h=solenoid_body_height+1,d=solenoid_body_diameter+PRINT_EPSILON);
+        imu_B0_cutout();
     }
 }
 
@@ -94,8 +127,7 @@ module B0_solenoid() {
 }
 
 module B0_imu() {
-    translate([5,20,20])
-    imu();
+    translate(IMU_B0_POS) imu();
 }
 
 module fastener(s, sub_epsilon = false) {
@@ -185,6 +217,7 @@ module TIPPER(angle = 0) {
                     translate([ dx, dy,0])    cylinder(h=60,d=screw_diameter);
                     translate([-dx, dy,0])    cylinder(h=60,d=screw_diameter);
                 }
+                translate([w/2,0,-IMU_DIM[2]]) imu_TIPPER_cutout();
             }
         }
     }
@@ -192,12 +225,8 @@ module TIPPER(angle = 0) {
 
 module TIPPER_imu(angle = 0) {
     hh = tipper_height/2;
-    translate([0,0,15]) {
-        translate([0,hh,0]) rotate([0,0,angle]) translate([0,-hh,0]) {
-            translate([-43,15,0]) {
-                imu();
-            }
-        }
+    translate([0,hh,0]) rotate([0,0,angle]) translate([0,-hh,0]) {
+        translate([0,0,-IMU_DIM[2]+CAD_EPSILON]) translate(IMU_TIPPER_POS) imu();
     }
 }
 
