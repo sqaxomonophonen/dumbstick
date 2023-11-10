@@ -56,7 +56,7 @@ module solenoid(pull = 0) {
 // IMU: GY-521
 IMU_DIM = [21, 15, 1.2];
 IMU_DHOLE = 2.54;
-IMU_RHOLE = 3;
+IMU_RHOLE = 3.5;
 
 IMU_B0_POS = [5,25,20];
 IMU_TIPPER_POS = [-43,15,15];
@@ -335,7 +335,7 @@ module TIPPER(angle = 0) {
                 translate([w-margin,ln/2,-30]) {
                     dx = 4.5;
                     dy = 8;
-                    screw_diameter = 3;
+                    screw_diameter = 3.5;
                     translate([-dx,-dy,0])    cylinder(h=60,d=screw_diameter);
                     translate([ dx,-dy,0])    cylinder(h=60,d=screw_diameter);
                     translate([ dx, dy,0])    cylinder(h=60,d=screw_diameter);
@@ -408,7 +408,7 @@ module TIPPER_clamp() {
             TIPPER();
             tipper_cut();
         }
-        tipper_grooves(0,PRINT_EPSILON);
+        tipper_grooves();
     }
 }
 
