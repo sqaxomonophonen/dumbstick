@@ -108,11 +108,19 @@ module screw_cut(screw_diameter, screw_length, head_diameter, head_length, exten
     }
 }
 
+module cutting_screw_cut(screw_diameter, screw_length, head_diameter, head_length, extend=10) {
+    translate([0,0,-extend]) {
+        cylinder(h=screw_length + extend, d=screw_diameter);
+        translate([0,0,extend-PRINT_EPSILON]) cylinder(h=head_length+PRINT_EPSILON, d2=screw_diameter + PRINT_EPSILON, d1=head_diameter + PRINT_EPSILON);
+        cylinder(h=extend, d=head_diameter);
+    }
+}
+
 module screw0_cut() {
-    screw_cut(
-        screw_diameter = 3,
-        screw_length = 37,
-        head_diameter = 5.7 + PRINT_EPSILON,
+    cutting_screw_cut(
+        screw_diameter = 2.9,
+        screw_length = 42,
+        head_diameter = 6.6 + PRINT_EPSILON,
         head_length = 2.3 + PRINT_EPSILON
     );
 }
@@ -122,7 +130,7 @@ module griplock0(depth=40) {
     H=25;
     R=10;
     M=10;
-    X=5;
+    X=7.5;
     difference() {
         cube([W,H,depth]);
         translate([W/2,H/2,-M/2]) cylinder(h=depth+M,d=R+CAD_EPSILON);
@@ -137,6 +145,8 @@ module B0() {
     stop0_offset = 72;
 
     wire_diameter = 4;
+
+    ytop = 165;
 
     union() {
         difference() {
@@ -159,7 +169,6 @@ module B0() {
 
             imu_B0_cutout();
 
-            ytop = 165;
             translate([50, ytop, 0]) rotate([0,0,180]) rotate([-90,0,0]) screw0_cut();
             translate([90, ytop])    rotate([0,0,180]) rotate([-90,0,0]) screw0_cut();
 
