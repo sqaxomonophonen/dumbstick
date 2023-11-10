@@ -117,6 +117,19 @@ module screw0_cut() {
     );
 }
 
+module griplock0(depth=40) {
+    W=15;
+    H=25;
+    R=10;
+    M=10;
+    X=5;
+    difference() {
+        cube([W,H,depth]);
+        translate([W/2,H/2,-M/2]) cylinder(h=depth+M,d=R+CAD_EPSILON);
+        translate([W/2,(H-X)/2,-M/2]) cube([50,X,depth+M]);
+    }
+}
+
 module B0() {
     // primary stop screw
     stop0_diameter = 6.5;
@@ -125,34 +138,36 @@ module B0() {
 
     wire_diameter = 4;
 
-    difference() {
-        translate([0,0,-20]) linear_extrude(height=40, convexity=3) import("b0.dxf");
-        translate([-50,-10,-10]) cube([100,40+10,20]);
-        translate([15,15,-50]) cylinder(h=100,d=AXIS_DIAMETER);
-        translate([stop0_offset,0,0]) rotate([0,0,stop0_angle]) rotate([-90,0,0]) cylinder(h=100,d=stop0_diameter);
-        translate([70,0,0]) rotate([-90,0,0]) cylinder(h=100,d=wire_diameter);
-        translate([70,105,0]) rotate([-90,0,0]) cylinder(h=solenoid_body_height+1,d=solenoid_body_diameter+PRINT_EPSILON);
-        translate([60,70,-50]) {
-            cube([20,40,100]);
+    union() {
+        difference() {
+            translate([0,0,-20]) linear_extrude(height=40, convexity=3) import("b0.dxf");
+            translate([-50,-10,-10]) cube([100,40+10,20]);
+            translate([15,15,-50]) cylinder(h=100,d=AXIS_DIAMETER);
+            translate([stop0_offset,0,0]) rotate([0,0,stop0_angle]) rotate([-90,0,0]) cylinder(h=100,d=stop0_diameter);
+            translate([70,0,0]) rotate([-90,0,0]) cylinder(h=100,d=wire_diameter);
+            translate([70,105,0]) rotate([-90,0,0]) cylinder(h=solenoid_body_height+1,d=solenoid_body_diameter+PRINT_EPSILON);
+            translate([60,70,-50]) {
+                cube([20,40,100]);
+            }
+
+            // solenoid "grill"
+            translate([55,155,-50]) cube([30,5,100]);
+            translate([55,145,-50]) cube([30,5,100]);
+            translate([55,135,-50]) cube([30,5,100]);
+            translate([55,125,-50]) cube([30,5,100]);
+            translate([55,115,-50]) cube([30,5,100]);
+
+            imu_B0_cutout();
+
+            ytop = 165;
+            translate([50, ytop, 0]) rotate([0,0,180]) rotate([-90,0,0]) screw0_cut();
+            translate([90, ytop])    rotate([0,0,180]) rotate([-90,0,0]) screw0_cut();
+
+            translate([82,157,0]) rotate([-90,0,0]) cylinder(h=100, d=4.5); // hole for solenoid wires
         }
-
-        // solenoid "grill"
-        translate([55,155,-50]) cube([30,5,100]);
-        translate([55,145,-50]) cube([30,5,100]);
-        translate([55,135,-50]) cube([30,5,100]);
-        translate([55,125,-50]) cube([30,5,100]);
-        translate([55,115,-50]) cube([30,5,100]);
-
-        imu_B0_cutout();
-
-        ytop = 165;
-        translate([50, ytop, 0]) rotate([0,0,180]) rotate([-90,0,0]) screw0_cut();
-        translate([90, ytop])    rotate([0,0,180]) rotate([-90,0,0]) screw0_cut();
-
-        translate([82,157,0]) rotate([-90,0,0]) cylinder(h=100, d=4.5); // hole for solenoid wires
+        translate([93, 95,-20]) griplock0();
+        translate([93, 120,-20]) griplock0();
     }
-
-
 }
 
 module B0_solenoid(pull = 0) {
@@ -385,5 +400,17 @@ module TIPPER_clamp() {
             tipper_cut();
         }
         tipper_grooves(0,PRINT_EPSILON);
+    }
+}
+
+module GRIP() {
+    batdim = [103, 34, 23]; // roughly + tolerances
+    translate([125,105,-10]) {
+        rotate([0,0,-10]) {
+            difference() {
+                translate([-5,-5,-5]) cube([batdim[0]+10, batdim[1]+10, batdim[2]+4]);
+                cube(batdim);
+            }
+        }
     }
 }

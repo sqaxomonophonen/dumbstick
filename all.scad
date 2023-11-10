@@ -27,6 +27,7 @@ translate([0,-60,0]) {
 
 translate([300,0,0]) {
     B0();
+    GRIP();
     translate([15,0,-15/2]) {
         VISHACK() TIPPER(angle = TIPPER_ANGLE);
         if (SHOW_IMUS) {
