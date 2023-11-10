@@ -135,17 +135,23 @@ module B0() {
         translate([60,70,-50]) {
             cube([20,40,100]);
         }
+
+        // solenoid "grill"
         translate([55,155,-50]) cube([30,5,100]);
         translate([55,145,-50]) cube([30,5,100]);
         translate([55,135,-50]) cube([30,5,100]);
         translate([55,125,-50]) cube([30,5,100]);
         translate([55,115,-50]) cube([30,5,100]);
+
         imu_B0_cutout();
+
         ytop = 165;
         translate([50, ytop, 0]) rotate([0,0,180]) rotate([-90,0,0]) screw0_cut();
         translate([90, ytop])    rotate([0,0,180]) rotate([-90,0,0]) screw0_cut();
 
+        translate([82,157,0]) rotate([-90,0,0]) cylinder(h=100, d=4.5); // hole for solenoid wires
     }
+
 
 }
 
@@ -221,8 +227,8 @@ module B0_hat_fixlocks(sub_epsilon = false) {
     y1 = 100;
     hh = 2;
     translate([60,162.5,0]) fixlock(tiny, sub_epsilon, hh=hh);
-    translate([70,162.5,0]) fixlock(tiny, sub_epsilon, hh=hh);
-    translate([80,162.5,0]) fixlock(tiny, sub_epsilon, hh=hh);
+    translate([67,162.5,0]) fixlock(tiny, sub_epsilon, hh=hh);
+    translate([74,162.5,0]) fixlock(tiny, sub_epsilon, hh=hh);
 }
 
 module B0_hat_bottom() {
