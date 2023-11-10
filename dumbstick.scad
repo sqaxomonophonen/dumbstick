@@ -101,6 +101,22 @@ module imu_TIPPER_cutout() {
     }
 }
 
+module screw_cut(screw_diameter, screw_length, head_diameter, head_length, extend=10) {
+    translate([0,0,-extend]) {
+        cylinder(h=screw_length + extend, d=screw_diameter);
+        cylinder(h=head_length + extend, d=head_diameter);
+    }
+}
+
+module screw0_cut() {
+    screw_cut(
+        screw_diameter = 3,
+        screw_length = 37,
+        head_diameter = 5.7 + PRINT_EPSILON,
+        head_length = 2.3 + PRINT_EPSILON
+    );
+}
+
 module B0() {
     // primary stop screw
     stop0_diameter = 6.5;
@@ -125,9 +141,10 @@ module B0() {
         translate([55,125,-50]) cube([30,5,100]);
         translate([55,115,-50]) cube([30,5,100]);
         imu_B0_cutout();
-        top_screw_diameter = 5;
-        translate([50, 125, 0]) rotate([-90,0,0]) cylinder(h=100,d=top_screw_diameter);
-        translate([90, 125, 0]) rotate([-90,0,0]) cylinder(h=100,d=top_screw_diameter);
+        ytop = 165;
+        translate([50, ytop, 0]) rotate([0,0,180]) rotate([-90,0,0]) screw0_cut();
+        translate([90, ytop])    rotate([0,0,180]) rotate([-90,0,0]) screw0_cut();
+
     }
 
 }
@@ -203,9 +220,9 @@ module B0_hat_fixlocks(sub_epsilon = false) {
     y0 = 70;
     y1 = 100;
     hh = 2;
-    translate([55,162.5,0]) fixlock(tiny, sub_epsilon, hh=hh);
+    translate([60,162.5,0]) fixlock(tiny, sub_epsilon, hh=hh);
     translate([70,162.5,0]) fixlock(tiny, sub_epsilon, hh=hh);
-    translate([85,162.5,0]) fixlock(tiny, sub_epsilon, hh=hh);
+    translate([80,162.5,0]) fixlock(tiny, sub_epsilon, hh=hh);
 }
 
 module B0_hat_bottom() {
@@ -288,7 +305,7 @@ module TIPPER(angle = 0) {
                 translate([w-margin,ln/2,-30]) {
                     dx = 4.5;
                     dy = 8;
-                    screw_diameter = 4;
+                    screw_diameter = 3;
                     translate([-dx,-dy,0])    cylinder(h=60,d=screw_diameter);
                     translate([ dx,-dy,0])    cylinder(h=60,d=screw_diameter);
                     translate([ dx, dy,0])    cylinder(h=60,d=screw_diameter);
