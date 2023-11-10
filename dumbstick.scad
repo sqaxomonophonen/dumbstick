@@ -127,7 +127,7 @@ module screw0_cut() {
 
 module griplock0(depth=40) {
     W=15;
-    H=25;
+    H=20;
     R=10;
     M=10;
     X=7.5;
@@ -174,8 +174,8 @@ module B0() {
 
             translate([82,157,0]) rotate([-90,0,0]) cylinder(h=100, d=4.5); // hole for solenoid wires
         }
-        translate([93, 95,-20]) griplock0();
-        translate([93, 120,-20]) griplock0();
+        translate([93, 105,-20]) griplock0();
+        translate([93, 125,-20]) griplock0();
     }
 }
 
